@@ -1,10 +1,10 @@
 # rootless UID マッピング
 
-rootless Podman を理解する上で最も重要な概念が UID マッピングである。Docker と Podman でコンテナ内の UID がホスト上でどのように見えるかが大きく異なる。
+rootless Podman を理解する上で最も重要な概念が UID マッピングである。
 
 ## rootful Docker の UID マッピング
 
-Docker ではデーモンが root で動作するため、コンテナ内の UID はそのままホストの UID に対応する:
+コンテナ内の UID はそのままホストの UID に対応する:
 
 ```
 Container UID    Host UID
@@ -15,11 +15,11 @@ Container UID    Host UID
 +-----------+    +-----------+
 ```
 
-シンプルだが、コンテナ内の root がホストの root と同一のため、コンテナブレイクアウト時のリスクが大きい。
+コンテナ内の root がホストの root と同一のため、ブレイクアウト時のリスクが大きい。
 
 ## rootless Podman の UID マッピング
 
-rootless Podman では、コンテナ内の UID がホスト上の異なる UID にマッピングされる。例えば、ホスト UID が 4589 のユーザーの場合:
+コンテナ内の UID がホスト上の異なる UID にマッピングされる。ホスト UID が 4589 のユーザーの場合:
 
 ```
 Container UID    Host UID
@@ -32,23 +32,19 @@ Container UID    Host UID
 +-----------+    +-------------+
 ```
 
-- コンテナ内の root (UID 0) はホストの自分自身の UID (4589) にマッピングされる
-- コンテナ内の UID 1-65536 は `/etc/subuid` で割り当てられた範囲にマッピングされる
+- コンテナ内の root (UID 0) → ホストの自分の UID (4589) にマッピング
+- コンテナ内の UID 1-65536 → `/etc/subuid` で割り当てられた範囲にマッピング
 
-### `/etc/subuid` と `/etc/subgid`
-
-サブ UID/GID の割り当ては `/etc/subuid` と `/etc/subgid` に記載されている:
+`/etc/subuid` と `/etc/subgid` の例:
 
 ```
-# /etc/subuid の例
+# /etc/subuid
 username:458900000:65536
 ```
 
-この例では、`username` に UID 458900000 から 65536 個の UID（458900000-458965535）が割り当てられている。
+`username` に UID 458900000 から 65536 個の UID（458900000-458965535）が割り当てられている。
 
-### マッピングの確認
-
-現在のユーザー名前空間でのマッピングを確認する:
+マッピングの確認:
 
 ```bash
 podman unshare cat /proc/self/uid_map
@@ -56,11 +52,12 @@ podman unshare cat /proc/self/uid_map
 
 ## バインドマウントへの影響
 
-UID マッピングはバインドマウント時のファイル所有権に直接影響する。
+UID マッピングはバインドマウント時のファイル所有権に直接影響する:
 
-### コンテナ内 root でファイルを作成した場合
+- **コンテナ内 root でファイルを作成** → ホストでも自分の UID で所有される（便利）
+- **コンテナ内の非 root UID でファイルを作成** → subuid 範囲の大きな UID になり、ホストから読み書きできない場合がある（パーミッション問題の原因）
 
-コンテナ内の root (UID 0) = ホストの自分の UID なので、ホスト上で見ても自分の所有ファイルになる。**これは便利な特性である。**
+コンテナ内 root の場合:
 
 ```bash
 # コンテナ内で root としてファイルを作成
@@ -71,9 +68,7 @@ ls -la ./data/test.txt
 # -rw-r--r-- 1 username username 0 ... test.txt
 ```
 
-### コンテナ内の非 root ユーザーでファイルを作成した場合
-
-コンテナ内の非 root UID は subuid 範囲にマッピングされるため、ホスト上では見慣れない大きな UID で所有される。
+コンテナ内の非 root UID の場合:
 
 ```bash
 # コンテナ内で UID 1000 としてファイルを作成
@@ -84,13 +79,11 @@ ls -la ./data/test.txt
 # -rw-r--r-- 1 458900999 458900999 0 ... test.txt
 ```
 
-**このファイルはホスト上の自分のユーザーでは読み書きできない場合がある。** これが rootless Podman でよく遭遇するパーミッション問題の原因である。
-
 ## `keep-id` オプション
 
-`keep-id` は、ホストの UID をコンテナ内でもそのまま使うためのオプションである。
+ホストの UID をコンテナ内でもそのまま使うためのオプション。
 
-### 基本的な `keep-id`
+基本的な `keep-id`:
 
 ```yaml
 # compose.override.podman.yml
@@ -99,11 +92,9 @@ services:
     userns_mode: "keep-id"
 ```
 
-この設定では、ホストの UID (例: 4589) がコンテナ内でも UID 4589 として見える。コンテナ内でファイルを作成すると、ホスト上でも同じ UID で所有されるため、パーミッション問題が解消される。
+ホスト UID がコンテナ内でもそのまま見え、ファイル所有権の不一致が解消される。
 
-### 特定 UID へのマッピング
-
-PostgreSQL (UID 999) や Elasticsearch (UID 1000) のように、特定の UID で動作するサービスでは、ホスト UID をその UID にマッピングする:
+特定 UID へのマッピング:
 
 ```yaml
 # PostgreSQL の例
@@ -112,7 +103,7 @@ services:
     userns_mode: "keep-id:uid=999,gid=999"
 ```
 
-この設定では、ホストの UID (例: 4589) がコンテナ内では UID 999 (postgres ユーザー) として見える。PostgreSQL がデータファイルを作成すると、ホスト上では自分の UID (4589) で所有される。
+PostgreSQL (UID 999) や Elasticsearch (UID 1000) のように特定 UID で動作するサービスで使用する。ホスト UID (例: 4589) がコンテナ内では UID 999 として見え、データファイルはホスト上で自分の UID で所有される。
 
 ## まとめ
 

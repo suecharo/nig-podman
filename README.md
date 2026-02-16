@@ -1,6 +1,10 @@
 # nig-podman
 
-遺伝研（NIG）スパコンで rootless Podman を利用するためのセットアップ手順、サービス設定例、開発用テンプレート集。Docker に慣れたユーザーが Podman 環境にスムーズに移行できることを目的とする。
+Docker に慣れたユーザーが NIG スパコンの Podman 環境にスムーズに移行するための:
+
+- セットアップ手順
+- よく使うサービスの設定例（nginx, PostgreSQL, Elasticsearch）
+- 開発用テンプレート（Python, TypeScript）
 
 ## 想定読者
 
@@ -13,10 +17,10 @@
 ```
 nig-podman/
 ├── docs/                         # ドキュメント
-│   ├── introduction.md           #   Docker vs Podman の違い
-│   ├── setup.md                  #   NIG 環境でのセットアップ
-│   ├── uid-mapping.md            #   rootless UID マッピング解説
-│   └── compose-tips.md           #   compose の Docker/Podman 両対応
+│   ├── introduction.md          #   Docker vs Podman の違い
+│   ├── setup.md                 #   NIG 環境でのセットアップ
+│   ├── uid-mapping.md           #   rootless UID マッピング解説
+│   └── compose-tips.md          #   compose の Docker/Podman 両対応
 └── examples/                     # 設定例・テンプレート
     ├── nginx/                    #   リバースプロキシ
     ├── postgres/                 #   PostgreSQL
@@ -75,39 +79,7 @@ podman-compose up
 
 ## Quick Start
 
-### 1. Podman の初期設定（NIG スパコン）
-
-```bash
-mkdir -p ~/.config/containers
-```
-
-`~/.config/containers/storage.conf`:
-
-```toml
-[storage]
-  driver = "overlay"
-  graphroot = "/data1/{user}/storage"
-
-[storage.options]
-  mount_program = "/usr/bin/fuse-overlayfs"
-```
-
-`~/.config/containers/registries.conf`:
-
-```toml
-[registries.search]
-registries = ['docker.io']
-```
-
-> `{user}` は自分のユーザー名に置き換える。詳細は [セットアップ手順](./docs/setup.md) を参照。
-
-設定の確認:
-
-```bash
-podman info | grep -E 'graphRoot|graphDriverName'
-```
-
-### 2. 設定例の利用
+[セットアップ手順](./docs/setup.md) に従って `~/.config/containers/` に設定ファイルを配置した後、設定例を利用する:
 
 ```bash
 cd examples/python-uv
