@@ -1,0 +1,9 @@
+services:
+  nginx:
+    image: docker.io/library/nginx:1.27
+    container_name: example-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    init: true

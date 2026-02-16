@@ -1,0 +1,11 @@
+services:
+  app:
+    build: .
+    container_name: example-python-uv
+    volumes:
+      - .:/app:rw
+      - venv:/app/.venv:rw
+    init: true
+
+volumes:
+  venv: {}

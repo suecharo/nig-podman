@@ -1,0 +1,6 @@
+services:
+  app:
+    userns_mode: "keep-id"
+    volumes:
+      - .:/app:rw
+      - node_modules:/app/node_modules:rw,U

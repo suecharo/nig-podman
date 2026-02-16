@@ -1,0 +1,6 @@
+services:
+  app:
+    userns_mode: "keep-id"
+    volumes:
+      - .:/app:rw
+      - venv:/app/.venv:rw,U

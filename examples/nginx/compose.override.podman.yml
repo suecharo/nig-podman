@@ -1,0 +1,4 @@
+# nginx runs as root inside the container.
+# In rootless Podman, container root = host user, so no special config needed.
+# This file is provided for consistency with the override pattern.
+services: {}

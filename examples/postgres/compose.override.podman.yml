@@ -1,0 +1,5 @@
+# PostgreSQL runs as uid 999 (postgres) inside the container.
+# Map host UID to container uid 999 so data files are owned by the host user.
+services:
+  db:
+    userns_mode: "keep-id:uid=999,gid=999"
