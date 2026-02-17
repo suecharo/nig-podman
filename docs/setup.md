@@ -76,6 +76,26 @@ registries = ['docker.io']
 
 この設定により、`podman pull python:3.12` のようにレジストリを省略した指定でも Docker Hub から pull できるようになる。
 
+## Linger の有効化
+
+rootless Podman のコンテナはユーザーのプロセスとして動作する。デフォルトでは SSH セッションを切断するとユーザーのプロセスが終了し、`podman-compose up -d` で起動したバックグラウンドコンテナも停止する。
+
+Linger を有効にすると、ログアウト後もユーザーのプロセスが維持される:
+
+```bash
+loginctl enable-linger
+```
+
+確認:
+
+```bash
+loginctl show-user $(whoami) --property=Linger
+```
+
+`Linger=yes` と表示されれば有効。この設定は永続化されるため、一度実行すれば再設定は不要。
+
+> Linger はログアウト後のプロセス維持のみを行う。サーバー再起動後にコンテナを自動起動するには追加の設定が必要。詳細は [サーバー再起動後のコンテナ自動起動](./auto-restart.md) を参照。
+
 ## 設定の確認
 
 ```bash

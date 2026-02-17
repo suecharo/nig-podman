@@ -20,7 +20,8 @@ nig-podman/
 │   ├── introduction.md          #   Docker vs Podman の違い
 │   ├── setup.md                 #   NIG 環境でのセットアップ
 │   ├── uid-mapping.md           #   rootless UID マッピング解説
-│   └── compose-tips.md          #   compose の Docker/Podman 両対応
+│   ├── compose-tips.md          #   compose の Docker/Podman 両対応
+│   └── auto-restart.md          #   サーバー再起動後のコンテナ自動起動
 └── examples/                     # 設定例・テンプレート
     ├── nginx/                    #   リバースプロキシ
     ├── postgres/                 #   PostgreSQL
@@ -57,6 +58,7 @@ podman-compose up
 | [NIG での Podman セットアップ](./docs/setup.md) | storage.conf, registries.conf の設定手順 |
 | [rootless UID マッピング](./docs/uid-mapping.md) | UID マッピングの仕組み、keep-id オプション |
 | [compose の Docker/Podman 両対応](./docs/compose-tips.md) | override パターン、パーミッション戦略 |
+| [サーバー再起動後のコンテナ自動起動](./docs/auto-restart.md) | podman-restart.service による自動起動 |
 
 ## 設定例・テンプレート
 
